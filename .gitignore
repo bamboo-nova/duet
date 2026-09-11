@@ -76,7 +76,7 @@ web_modules/
 
 # Next.js build output
 .next
-out
+# NOTE: the template's bare "out" rule is removed — it would ignore docs/out/ (the Excalidraw structure maps)
 
 # Nuxt.js build / generate output
 .nuxt
