@@ -1,0 +1,18 @@
+{
+  "name": "duet",
+  "version": "1.0.0",
+  "description": "A development pipeline that pairs Claude Code (planning & code review) with Codex (plan verification & implementation) in fixed roles. One skill drives the whole flow: requirements interview → subgoal decomposition → Codex verification loop → ADR export → per-subgoal implementation and review.",
+  "author": {
+    "name": "bamboo-nova"
+  },
+  "skills": [
+    "./.agents/skills"
+  ],
+  "keywords": [
+    "orchestration",
+    "codex",
+    "planning",
+    "verification",
+    "pair-development"
+  ]
+}

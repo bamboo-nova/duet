@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "duet verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target", "findings"],
+  "properties": {
+    "target": {
+      "type": "string",
+      "description": "Verification target: plan / subgoal:<ID> / implementation:<ID>"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "severity", "scope", "title", "detail", "suggestion"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Sequential finding ID: F1, F2, ..."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "high = plan/implementation defect, must fix / medium = risk, needs consideration / low = improvement suggestion"
+          },
+          "scope": {
+            "type": "string",
+            "description": "Target subgoal ID. Use 'overall' for findings that span the whole plan"
+          },
+          "title": {
+            "type": "string",
+            "description": "One-line summary of the finding"
+          },
+          "detail": {
+            "type": "string",
+            "description": "What is wrong. Be concrete about evidence and reproduction conditions"
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "Proposed fix"
+          }
+        }
+      }
+    }
+  }
+}

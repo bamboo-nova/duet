@@ -1,0 +1,6 @@
+{
+  "name": "duet",
+  "version": "1.0.0",
+  "description": "A development pipeline that pairs Claude Code (planning & code review) with Codex (plan verification & implementation) in fixed roles. One skill drives everything from the requirements interview to implementation review.",
+  "skills": "./.agents/skills/"
+}

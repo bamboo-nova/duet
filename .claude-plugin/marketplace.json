@@ -1,0 +1,22 @@
+{
+  "name": "duet",
+  "description": "Marketplace for the duet plugin (a development pipeline that makes Claude Code and Codex CLI collaborate).",
+  "owner": {
+    "name": "bamboo-nova"
+  },
+  "plugins": [
+    {
+      "name": "duet",
+      "source": "./",
+      "version": "1.0.0",
+      "description": "A development pipeline that pairs Claude Code (planning & code review) with Codex (plan verification & implementation) in fixed roles. Works in both Claude Code and Codex CLI.",
+      "keywords": [
+        "orchestration",
+        "codex",
+        "planning",
+        "verification",
+        "pair-development"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+schema: plugin-structure/v1.1
+ontology: claude-plugin/v1
+dialect: claude-code
+lang: ja
+title: "duet プラグイン構成図"
+generated:
+  by: extract.py/1.1
+  at: "2026-09-09T14:28:09+00:00"
+  environment: claude-code-dirscan
+  source_root: "/Users/yukihiro-su/Desktop/Otameshi/workspace/practices/duet"
+plugin:
+  name: duet  # provenance: manifest
+  version: 1.0.0
+  overview: "Claude Code が計画とレビュー、Codex が検証と実装を担う二刀流の開発パイプライン。全フェーズを .duet/ にチェックポイントし、承認ゲートで人間が進行を握る。"
+note: "単一スキルのプラグイン。Claude Code / Codex の役割は外部 CLI プロセス(claude -p / codex exec)であり、プラグイン内エージェントではない。"
+components:
+  skills:
+    visibility: verified
+    provenance: dirscan
+    items:
+      - id: duet
+        role: orchestrator
+        description: "役割固定パイプライン: 要件インタビュー -> Claude Code がサブゴール分解 -> Codex 検証ループ -> ADR 書き出し -> サブゴール単位の Codex 実装と Claude Code レビュー。"
+        pipeline_order: null
+        uses:
+          mcp: {}
+          agents: []
+          scripts: []
+        provenance: dirscan
+  agents:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  hooks:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  commands:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  mcp_servers:
+    visibility: verified_empty
+    provenance: manifest
+    items: []
+  lsp_servers:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  monitors:
+    visibility: verified_empty
+    provenance: manifest
+    items: []
+  scripts:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  data_references:
+    visibility: verified
+    provenance: dirscan
+    items:
+      - file: ".agents/skills/duet/references/counterpart-cli.md"
+        kind: お作法
+        note: "codex exec / claude -p の呼び出しレシピ(codex-cli 0.151.0 で実測)"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/interview-template.md"
+        kind: テンプレート
+        note: "ラウンド制インタビューの手順と requirements.md テンプレート"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/verdict-schema.md"
+        kind: スキーマ
+        note: "検証とレビューで共通の指摘フォーマットとループ規約"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/verdict.schema.json"
+        kind: スキーマ
+        note: "codex exec --output-schema で強制する JSON Schema"
+        provenance: dirscan
+      - file: ".codex-plugin/plugin.json"
+        kind: 設定
+        note: "Codex CLI 互換マニフェスト"
+        provenance: dirscan
+flow:
+  lanes:
+    - { id: main, label: "duet パイプライン -- 起動元が進行役。Codex の工程は codex exec サンドボックスで実行" }
+    - { id: state, label: ".duet/ 状態ストア" }
+  placement:
+    - { ref: duet, lane: main, col: 0 }
+    - { ref: requirements.md, lane: main, col: 1, kind: data, desc: "フェーズ1: インタビュー成果物。承認ゲート①" }
+    - { ref: plan.md, lane: main, col: 2, kind: data, desc: "フェーズ2: Claude Code がサブゴール分解。検証履歴もここに追記" }
+    - { ref: verification-N.json, lane: main, col: 3, kind: data, desc: "フェーズ3: Codex の verdict(codex exec read-only、最大3ループ)。承認ゲート②" }
+    - { ref: adr-N-slug.md, lane: main, col: 4, kind: data, desc: "フェーズ4: 承認済み計画をリポジトリ直下に書き出し" }
+    - { ref: workspace-edits, lane: main, col: 5, kind: data, desc: "フェーズ5: Codex が workspace-write サンドボックスで実装。git はユーザーに委ねる" }
+    - { ref: review-SG-N.json, lane: main, col: 6, kind: data, desc: "フェーズ5: Claude Code レビューの verdict(サブゴールごと最大3回)" }
+    - { ref: state.json, lane: state, col: 0, kind: data, desc: "フェーズ・ループカウンタ・セッション ID。いつでも再開可" }
+  edges:
+    - { from: duet, to: requirements.md, label: "フェーズ1 インタビュー" }
+    - { from: requirements.md, to: plan.md, label: "フェーズ2 Claude Code が計画" }
+    - { from: plan.md, to: verification-N.json, label: "フェーズ3 Codex が検証" }
+    - { from: verification-N.json, to: plan.md, type: ref, label: "指摘を Claude Code が反映" }
+    - { from: verification-N.json, to: adr-N-slug.md, label: "フェーズ4 承認後" }
+    - { from: adr-N-slug.md, to: workspace-edits, label: "フェーズ5 Codex が実装" }
+    - { from: workspace-edits, to: review-SG-N.json, label: "Claude Code がレビュー" }
+    - { from: review-SG-N.json, to: workspace-edits, type: ref, label: "codex exec resume で修正" }
+    - { from: duet, to: state.json, type: ref, label: "チェックポイント / 再開" }
+  zones:
+    - { cols: [1, 1], label: "要件" }
+    - { cols: [2, 3], label: "計画と検証" }
+    - { cols: [4, 6], label: "ADR と実装" }
+example_trace:
+  - { actor: user, kind: user, text: "「/duet ログイン機能を追加したい」 -> duet スキルが起動" }
+  - { actor: duet, kind: orchestrator, text: ".duet/state.json なし -> 新規開始。ラウンド制インタビュー -> requirements.md。承認ゲート①" }
+  - { actor: duet, kind: skill, text: "Claude Code が完了条件つきの SG1..SG3 に分解 -> plan.md" }
+  - { actor: Codex, kind: agent, text: "codex exec(read-only、--output-schema verdict) -> verification-1.json: high 指摘1件" }
+  - { actor: duet, kind: skill, text: "Claude Code が指摘を plan.md に反映。codex exec resume でループ2 -> high ゼロで収束" }
+  - { actor: user, kind: gate, text: "承認ゲート②: plan.md と残 medium/low 指摘を提示 -> 承認" }
+  - { actor: duet, kind: orchestrator, text: "計画を adr-0001-login-feature.md としてリポジトリ直下に書き出し" }
+  - { actor: Codex, kind: agent, text: "codex exec(workspace-write)で SG1 を実装。Claude Code レビュー -> review-SG1-1.json: high ゼロ -> done" }
+  - { actor: duet, kind: orchestrator, text: "完了報告: 変更ファイル、残指摘、git commit はユーザーに委ねる" }

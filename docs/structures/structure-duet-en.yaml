@@ -1,0 +1,118 @@
+schema: plugin-structure/v1.1
+ontology: claude-plugin/v1
+dialect: claude-code
+lang: en
+title: "duet plugin structure map"
+generated:
+  by: extract.py/1.1
+  at: "2026-09-09T14:28:09+00:00"
+  environment: claude-code-dirscan
+  source_root: "/Users/yukihiro-su/Desktop/Otameshi/workspace/practices/duet"
+plugin:
+  name: duet  # provenance: manifest
+  version: 1.0.0
+  overview: "A dual-CLI development pipeline: Claude Code plans and reviews, Codex verifies and implements, and every phase is checkpointed to .duet/ behind human approval gates."
+note: "Single-skill plugin: the Claude Code / Codex roles are external CLI processes (claude -p / codex exec), not plugin agents."
+components:
+  skills:
+    visibility: verified
+    provenance: dirscan
+    items:
+      - id: duet
+        role: orchestrator
+        description: "Fixed-role pipeline: requirements interview -> Claude Code plans subgoals -> Codex verification loop -> ADR export -> per-subgoal Codex implementation with Claude Code review."
+        pipeline_order: null
+        uses:
+          mcp: {}
+          agents: []
+          scripts: []
+        provenance: dirscan
+  agents:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  hooks:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  commands:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  mcp_servers:
+    visibility: verified_empty
+    provenance: manifest
+    items: []
+  lsp_servers:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  monitors:
+    visibility: verified_empty
+    provenance: manifest
+    items: []
+  scripts:
+    visibility: verified_empty
+    provenance: dirscan
+    items: []
+  data_references:
+    visibility: verified
+    provenance: dirscan
+    items:
+      - file: ".agents/skills/duet/references/counterpart-cli.md"
+        kind: reference
+        note: "codex exec / claude -p invocation recipes (measured on codex-cli 0.151.0)"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/interview-template.md"
+        kind: template
+        note: "round-based requirements interview + requirements.md template"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/verdict-schema.md"
+        kind: schema
+        note: "shared finding format and loop rules for verification and review"
+        provenance: dirscan
+      - file: ".agents/skills/duet/references/verdict.schema.json"
+        kind: schema
+        note: "JSON Schema enforced via codex exec --output-schema"
+        provenance: dirscan
+      - file: ".codex-plugin/plugin.json"
+        kind: config
+        note: "Codex CLI compatibility manifest"
+        provenance: dirscan
+flow:
+  lanes:
+    - { id: main, label: "duet pipeline -- launcher orchestrates; Codex steps run in codex exec sandboxes" }
+    - { id: state, label: ".duet/ state store" }
+  placement:
+    - { ref: duet, lane: main, col: 0 }
+    - { ref: requirements.md, lane: main, col: 1, kind: data, desc: "Phase 1: interview output; approval gate 1" }
+    - { ref: plan.md, lane: main, col: 2, kind: data, desc: "Phase 2: Claude Code plans subgoals + verification history" }
+    - { ref: verification-N.json, lane: main, col: 3, kind: data, desc: "Phase 3: Codex verdicts via codex exec read-only (max 3 loops); approval gate 2" }
+    - { ref: adr-N-slug.md, lane: main, col: 4, kind: data, desc: "Phase 4: approved plan exported to repo root" }
+    - { ref: workspace-edits, lane: main, col: 5, kind: data, desc: "Phase 5: Codex implements in workspace-write sandbox; git left to the user" }
+    - { ref: review-SG-N.json, lane: main, col: 6, kind: data, desc: "Phase 5: Claude Code review verdicts (max 3 rounds per subgoal)" }
+    - { ref: state.json, lane: state, col: 0, kind: data, desc: "phase / loop counters / session IDs; resume anytime" }
+  edges:
+    - { from: duet, to: requirements.md, label: "Phase 1 interview" }
+    - { from: requirements.md, to: plan.md, label: "Phase 2 Claude Code plans" }
+    - { from: plan.md, to: verification-N.json, label: "Phase 3 Codex verifies" }
+    - { from: verification-N.json, to: plan.md, type: ref, label: "findings applied by Claude Code" }
+    - { from: verification-N.json, to: adr-N-slug.md, label: "Phase 4 after approval" }
+    - { from: adr-N-slug.md, to: workspace-edits, label: "Phase 5 Codex implements" }
+    - { from: workspace-edits, to: review-SG-N.json, label: "Claude Code reviews" }
+    - { from: review-SG-N.json, to: workspace-edits, type: ref, label: "fix via codex exec resume" }
+    - { from: duet, to: state.json, type: ref, label: "checkpoint / resume" }
+  zones:
+    - { cols: [1, 1], label: "requirements" }
+    - { cols: [2, 3], label: "plan & verify" }
+    - { cols: [4, 6], label: "ADR & implement" }
+example_trace:
+  - { actor: user, kind: user, text: "\"/duet add a login feature\" -> duet skill triggers" }
+  - { actor: duet, kind: orchestrator, text: "no .duet/state.json -> new run; round-based interview -> requirements.md; approval gate 1" }
+  - { actor: duet, kind: skill, text: "Claude Code decomposes into SG1..SG3 with done criteria -> plan.md" }
+  - { actor: Codex, kind: agent, text: "codex exec (read-only, --output-schema verdict) -> verification-1.json: 1 high finding" }
+  - { actor: duet, kind: skill, text: "Claude Code applies the finding to plan.md; loop 2 via codex exec resume -> zero high, converged" }
+  - { actor: user, kind: gate, text: "approval gate 2: plan.md + remaining medium/low findings -> approved" }
+  - { actor: duet, kind: orchestrator, text: "exports the plan as adr-0001-login-feature.md at the repo root" }
+  - { actor: Codex, kind: agent, text: "codex exec (workspace-write) implements SG1; Claude Code review -> review-SG1-1.json: zero high -> done" }
+  - { actor: duet, kind: orchestrator, text: "completion report: changed files, remaining findings, git commit left to the user" }
