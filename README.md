@@ -43,6 +43,7 @@ All state lives in `.duet/` inside the target repository, so an interrupted run 
 - Both the `claude` and `codex` CLIs installed.
 - A default model configured in each CLI's config. The plugin never specifies a model. A strong model is recommended for verification and implementation.
 - Tested against codex-cli 0.151.x.
+- Pipeline behavior was verified with Claude (Fable 5) and GPT (Sol) as the config defaults. Other models (e.g. Astra or Fable 5.1) may behave differently.
 
 ## Installation
 
@@ -98,8 +99,9 @@ Hands-off example: create a private room (worktree) in herdr, launch `/duet` ins
   Claude Code and Codex subscriptions or API plans. All usage costs are yours.
 - This is an unofficial, third-party plugin. It is not affiliated with, or endorsed by,
   Anthropic or OpenAI. Claude Code and Codex belong to their respective owners.
-- Behavior depends on the installed CLI versions (verified against codex-cli 0.151.x).
-  Future CLI versions may change flags or behavior and break the pipeline.
+- Behavior depends on the installed CLI versions and on the models each CLI's config
+  selects (verified against codex-cli 0.151.x, with Claude Fable 5 and GPT Sol).
+  Future CLI versions or newer models may change behavior and break the pipeline.
 - The authors accept no liability for damages arising from use of this plugin.
   See [LICENSE](./LICENSE) for details.
 
